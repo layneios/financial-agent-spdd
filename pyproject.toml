@@ -1,0 +1,69 @@
+[project]
+name = "financial-agent"
+version = "0.0.0"
+description = "Capstone Financial Helpdesk Agent: LangGraph + FastAPI + Postgres/pgvector."
+requires-python = ">=3.11"
+dependencies = [
+    "httpx>=0.27,<1.0",
+    "fastapi>=0.115,<0.120",
+    "uvicorn[standard]>=0.30,<1.0",
+    "pydantic>=2.7,<3.0",
+    "pydantic-settings>=2.4,<3.0",
+    "loguru>=0.7,<1.0",
+    "sqlalchemy>=2.0,<3.0",
+    "psycopg[binary]>=3.1,<4.0",
+    "pgvector>=0.3,<1.0",
+    "langgraph>=0.2,<0.3",
+    "langchain-core>=0.3,<0.4",
+    "jinja2>=3.1,<4.0",
+    "pyyaml>=6.0,<7.0",
+    "rapidfuzz>=3.0,<4.0",
+    "streamlit>=1.32,<2.0",
+]
+
+[project.optional-dependencies]
+dev = [
+    "pytest>=8.0,<9.0",
+    "pytest-asyncio>=0.23,<1.0",
+    "mypy>=1.10,<2.0",
+    "ruff>=0.5,<1.0",
+    "types-PyYAML>=6.0,<7.0",
+]
+
+[tool.setuptools.packages.find]
+where = ["."]
+include = ["app*", "data_pipelines*"]
+
+[tool.ruff]
+line-length = 100
+target-version = "py311"
+extend-exclude = [
+    "data_pipelines/ingest_docs/fetch_starter_docs.py",
+    "data_pipelines/ingest_tables/build_starter_sample.py",
+]
+
+[tool.ruff.lint]
+select = ["E", "F", "W", "I", "N", "UP", "B", "A", "C4", "RET", "SIM"]
+ignore = ["E501"]
+
+[tool.ruff.lint.per-file-ignores]
+"tests/**" = ["B011", "S101"]
+
+[tool.mypy]
+python_version = "3.11"
+strict = true
+warn_unused_ignores = true
+warn_return_any = true
+disallow_untyped_decorators = false
+files = ["app"]
+
+[[tool.mypy.overrides]]
+module = ["phoenix", "langsmith"]
+ignore_missing_imports = true
+
+[tool.pytest.ini_options]
+asyncio_mode = "auto"
+markers = [
+    "network: requires live network or Postgres; skipped by default",
+]
+testpaths = ["tests"]
