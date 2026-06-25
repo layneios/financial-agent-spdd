@@ -187,15 +187,23 @@ direction LR
    the ContextVar. No threading the id through every function
    signature.
 
-### TODO(trainee) — Trade-offs accepted
+### Trade-offs accepted
 
-> List the trade-offs your chosen design accepts. Hint: think
-> about retry budget vs latency, log volume vs traceability,
-> Pydantic-validation strictness vs developer ergonomics, and
-> structured-output enforcement vs LLM compliance. **At least
-> three** items, each with the form *"we accept X because Y, even
-> though Z."* This list is what your reviewer will check against
-> in code review.
+- We accept up to 3 retries with exponential backoff because 
+  transient 5xx and connection errors are common with hosted LLMs,
+  even though worst-case latency and token spend can triple (addresses risk 2).
+- We accept `SecretStr` for `openrouter_api_key` because it prevents
+  accidental repr leakage in logs and stack traces (addresses risk 3),
+  even though every callsite must call `.get_secret_value()` explicitly.
+- We accept logging every request and response (prompts truncated at 500
+  chars) because full traceability outweighs storage cost in early 
+  development, even though a high-traffic deployment will need log sampling later.
+- We accept hiding all provider-specific parameters behind the `LLMService`
+  facade because it keeps callers simple and provider-swappable (addresses 
+  risk 1), even though advanced features like streaming or tool-use cannot
+  be exposed without extending the interface.
+- We accept a client-side loop for Ollama batch embeddings because Ollama
+  has no native batch endpoint, even though it multiplies round-trips for large inputs.
 
 ---
 
