@@ -289,29 +289,22 @@ class LLMService:
    `httpx.AsyncClient`. The constructor accepts `base_url`, `api_key`,
    and an optional `transport` so tests can inject
    `httpx.MockTransport`.
-
-5. **TODO(trainee) — implement `LLMService`** for both providers.
-   Hint: a "transient" failure is not just HTTP 5xx — it also
-   includes connection-level errors (`httpx.TimeoutException`,
-   `httpx.RequestError`). Decide your retry predicate before
-   you write the loop and document the choice in your
-   Trade-offs section.
-   For `complete`, use the chat endpoints already pinned in the
-   acceptance criteria. For `embed`, the canonical paths are
-   `embeddings` (OpenRouter) and `api/embeddings` (Ollama, one
-   vector per call — you'll write a small client-side batch
-   loop). Document any deviations in your Trade-offs.
-6. **TODO(trainee) — wire `ServicesContainer` into `app/api/main.py`
-   lifespan and add `/readyz`.** While you are in `main.py`, add
-   the request-id middleware: read an incoming `X-Request-Id`
-   header if present, otherwise generate a UUIDv4; bind it via
-   `bind_request_id`; and set `X-Request-Id` on the outgoing
-   response so downstream services can correlate. The HTTP
-   header is the public contract; the ContextVar is the in-process
-   carrier.
-7. **TODO(trainee) — write tests**: `test_config.py`,
-   `test_llm_service.py` (with `httpx.MockTransport`),
-   `test_logging.py`. Aim for 100% coverage of the new modules.
+5. **Implement `app/services/llm_service.py`** for both providers.
+   Route `complete` to `POST /chat/completions` (OpenRouter) or `POST /api/chat`
+   (Ollama). Route `embed` to `POST /embeddings` (OpenRouter) or a client-side
+   loop over `POST /api/embeddings` (Ollama). Retry on HTTP 5xx, 
+   `httpx.TimeoutException`, and `httpx.RequestError` with exponential 
+   backoff up to 3 attempts; raise `LLMProviderError` on exhaustion. Never retry on 4xx.
+6. **Implement `app/core/services_container.py` and update `app/api/main.py`**: 
+   wire `ServicesContainer` into the lifespan, add `/readyz`, and add request-id
+   middleware — echo the incoming `X-Request-Id` header if present, otherwise
+   generate a UUIDv4; bind it via `bind_request_id`; set `X-Request-Id` on the 
+   outgoing response.
+7. **Write tests** in `tests/test_config.py`, `tests/test_llm_service.py` 
+   (using `httpx.MockTransport`), and `tests/test_logging.py`. Cover all acceptance
+   criteria: settings validation (including missing `OPENROUTER_API_KEY`), correct POST
+   endpoint per provider, 3-attempt retry raising `LLMProviderError`, and JSON log 
+   records containing `timestamp`, `level`, `request_id`, `event`, and `duration_ms`.
 8. **Update `README.md`** with a *Local development* section that
    covers `poetry install`, the canonical Ollama path (`ollama pull
    …`), and how to run `pytest` + `mypy --strict`. The destination
