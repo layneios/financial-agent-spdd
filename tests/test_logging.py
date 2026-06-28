@@ -9,7 +9,6 @@ import pytest
 from app.core.config import Settings
 from app.core.logging import bind_request_id, configure_logging, get_request_id
 
-
 _BASE_SETTINGS = Settings(
     pg_dsn="postgresql+psycopg://app:app@localhost:5432/app",
     log_format="json",
@@ -68,7 +67,6 @@ def test_get_request_id_non_null_after_bind() -> None:
 
 def test_json_log_record_contains_required_fields(capsys: pytest.CaptureFixture[str]) -> None:
     """AC: LOG_FORMAT=json → every record contains timestamp, level, request_id, event."""
-    import sys
     from loguru import logger
 
     configure_logging(_BASE_SETTINGS)

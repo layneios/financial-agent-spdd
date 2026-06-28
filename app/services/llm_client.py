@@ -47,7 +47,7 @@ class LLMHTTPClient:
         """Close the underlying :class:`httpx.AsyncClient`."""
         await self._client.aclose()
 
-    async def __aenter__(self) -> "LLMHTTPClient":
+    async def __aenter__(self) -> LLMHTTPClient:
         await self._client.__aenter__()
         return self
 

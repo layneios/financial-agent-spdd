@@ -38,7 +38,7 @@ def get_request_id() -> str | None:
     return _REQUEST_ID_VAR.get()
 
 
-def _patcher(record: Any) -> None:  # type: ignore[misc]
+def _patcher(record: Any) -> None:
     """Global loguru patcher: inject request_id; redact *_api_key/*_token/Authorization."""
     extra: dict[str, Any] = record["extra"]
 
@@ -61,11 +61,11 @@ def configure_logging(settings: Settings) -> None:
     Text mode  → human-readable line: ``timestamp | level | request_id | message``.
     """
     logger.remove()
-    logger.configure(patcher=_patcher)  # type: ignore[call-arg]
+    logger.configure(patcher=_patcher)
 
     if settings.log_format == "json":
 
-        def _json_sink(message: Any) -> None:  # type: ignore[misc]
+        def _json_sink(message: Any) -> None:
             record = message.record
             # Exclude request_id from the extra spread — it has its own top-level key.
             extra = {k: v for k, v in record["extra"].items() if k != "request_id"}
@@ -79,7 +79,7 @@ def configure_logging(settings: Settings) -> None:
             sys.stderr.write(json.dumps(log_entry) + "\n")
             sys.stderr.flush()
 
-        logger.add(_json_sink, level="DEBUG")  # type: ignore[arg-type]
+        logger.add(_json_sink, level="DEBUG")
     else:
         logger.add(
             sys.stderr,

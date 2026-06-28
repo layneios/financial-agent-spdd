@@ -7,8 +7,7 @@ asyncio.sleep is monkeypatched to near-zero to keep retry tests fast.
 from __future__ import annotations
 
 import json
-from typing import Any
-from unittest.mock import AsyncMock, patch
+from unittest.mock import AsyncMock
 
 import httpx
 import pytest
