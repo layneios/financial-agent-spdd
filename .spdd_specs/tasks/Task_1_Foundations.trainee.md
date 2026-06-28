@@ -31,21 +31,24 @@ parsing live behind the facade, never in the caller. Errors are
 typed so callers can decide policy without sniffing message
 strings.
 
-**Risks noticed:** (1) provider response-shape drift — OpenRouter and Ollama 
-return different JSON shapes; a silent upstream field rename breaks parsing. 
-Mitigated by Pydantic-typed parsing inside `LLMService` so any mismatch raises
-`LLMProviderError` immediately rather than passing bad data to callers. 
-(2) retry-induced cost amplification — 3 retries on expensive OpenRouter models
-can triple token spend per call. Mitigated by retrying only on 5xx and 
-connection-level errors (`httpx.TimeoutException`, `httpx.RequestError`), never
-on 4xx; the predicate is documented in Trade-offs. (3) secret leakage in logs
-— `OPENROUTER_API_KEY` can surface via `Authorization` headers, error payloads, 
-or `Settings.__repr__`. Mitigated by declaring the field as `SecretStr`, 
-stripping the header before logging, and redacting `*_api_key` / `*_token` 
-patterns at the log layer. (4) request_id correlation gaps — async callbacks 
-outside the request lifecycle may run with an unbound ContextVar, producing 
-un-correlatable log lines. Mitigated by generating a fallback UUIDv4 in 
-`bind_request_id` when the ContextVar is unset, and asserting non-null `request_id` in tests.
+**Risks noticed:** 
+
+1. provider response-shape drift — OpenRouter and Ollama return different
+   JSON shapes; a silent upstream field rename breaks parsing. 
+   Mitigated by Pydantic-typed parsing inside `LLMService` so any mismatch raises
+   `LLMProviderError` immediately rather than passing bad data to callers. 
+2. retry-induced cost amplification — 3 retries on expensive OpenRouter models
+   can triple token spend per call. Mitigated by retrying only on 5xx and 
+   connection-level errors (`httpx.TimeoutException`, `httpx.RequestError`), never
+   on 4xx; the predicate is documented in Trade-offs. 
+3. secret leakage in logs — `OPENROUTER_API_KEY` can surface via `Authorization` 
+   headers, error payloads, or `Settings.__repr__`. Mitigated by declaring the field as `SecretStr`, 
+   stripping the header before logging, and redacting `*_api_key` / `*_token` 
+   patterns at the log layer. 
+4. request_id correlation gaps — async callbacks outside the request lifecycle
+   may run with an unbound ContextVar, producing un-correlatable log lines. 
+   Mitigated by generating a fallback UUIDv4 in `bind_request_id` when the 
+   ContextVar is unset, and asserting non-null `request_id` in tests.
 
 ### Why this task exists
 
@@ -122,18 +125,18 @@ classDiagram
 direction LR
     class ServicesContainer {
 	    settings
-	    llmService
+	    llm_service
     }
 
     class Settings {
-	    embeddingDIM
-	    embeddingModel
-	    ollamaOPSModel
-	    ollamaChatModel
-	    ollamaBaseURL
-	    logFormat
-	    llmProvider
-	    pgDSN
+	    embedding_dim
+	    embedding_model
+	    ollama_ops_model
+	    ollama_chat_model
+	    ollama_base_url
+	    log_format
+	    llm_provider
+	    pg_dsn
     }
 
     class LLMService {
