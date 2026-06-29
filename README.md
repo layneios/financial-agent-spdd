@@ -55,6 +55,61 @@ poetry run ruff check .
 poetry run pytest -q
 ```
 
+## Local development (Week 1 — LLM service + config)
+
+### Prerequisites
+
+- Python ≥ 3.11 and [Poetry](https://python-poetry.org/) installed.
+- [Ollama](https://ollama.com/) running locally (canonical path):
+
+```bash
+ollama pull gemma3:27b          # synthesis / chat model
+ollama pull qwen3.5:4b          # ops / tagger model
+ollama pull nomic-embed-text    # embedding model (768-dim)
+```
+
+### Install dependencies
+
+```bash
+poetry install
+```
+
+### Configure environment
+
+```bash
+cp .env.example .env
+# Edit .env — at minimum, verify LLM_PROVIDER=ollama and PG_DSN
+```
+
+For OpenRouter instead of Ollama, set:
+
+```bash
+LLM_PROVIDER=openrouter
+OPENROUTER_API_KEY=sk-or-...    # required when provider=openrouter
+```
+
+### Run the tests
+
+```bash
+poetry run pytest -q            # all tests (unit + integration)
+poetry run pytest -q -m "not network"  # skip live-network tests
+```
+
+### Type checking and linting
+
+```bash
+poetry run mypy --strict --explicit-package-bases app
+poetry run ruff check .
+```
+
+### Start the API server locally
+
+```bash
+poetry run uvicorn app.api.main:app --reload --port 8000
+curl http://localhost:8000/healthz   # → {"status": "ok"}
+curl http://localhost:8000/readyz    # → {"status": "ok"}
+```
+
 ## Where to learn next
 
 The curriculum is delivered through the SPDD spec set. We
